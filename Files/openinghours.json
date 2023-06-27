@@ -1,0 +1,40 @@
+{
+    "schedule": {
+       "monday": {
+          "open": "08:00",
+          "closed": "16:00"
+       },
+       "tuesday": {
+         "open": "08:00",
+         "closed": "16:00"
+      },
+      "wednesday": {
+         "open": "08:00",
+         "closed": "16:00"
+      },
+      "thursday": {
+         "open": "08:00",
+         "closed": "16:00"
+      },
+      "friday": {
+         "open": "08:00",
+         "closed": "14:00"
+      }
+    },
+    "openingPeriod": {
+       "spring": {
+          "firstDate": "2023-02-01",
+          "closingDate": "2023-05-12",
+          "closedDates": [
+             "2023-03-01"
+          ]
+        },
+       "fall": {
+        "firstDate": "2023-02-01",
+        "closingDate": "2023-05-12",
+        "closedDates": [
+           "2023-03-01"
+        ]
+       }
+    }
+ }
