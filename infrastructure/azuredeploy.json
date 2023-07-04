@@ -1,0 +1,163 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.18.4.5664",
+      "templateHash": "17087743472393180048"
+    }
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "allowedValues": [
+        "dev",
+        "prd"
+      ]
+    }
+  },
+  "variables": {
+    "location": "West Europe",
+    "organizationPrefix": "aio",
+    "sharedResourcesAbbreviation": "shr"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2022-09-01",
+      "name": "[format('rg-{0}-openingHours-{1}', variables('organizationPrefix'), parameters('environment'))]",
+      "location": "[variables('location')]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}-func-openingHours', deployment().name)]",
+      "resourceGroup": "[format('rg-{0}-openingHours-{1}', variables('organizationPrefix'), parameters('environment'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "organizationPrefix": {
+            "value": "[variables('organizationPrefix')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "applicationInsightsInstrumentationKey": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('rg-{0}-{1}-{2}', variables('organizationPrefix'), variables('sharedResourcesAbbreviation'), parameters('environment'))), 'Microsoft.Insights/components', format('appi-{0}-{1}-{2}', variables('organizationPrefix'), variables('sharedResourcesAbbreviation'), parameters('environment'))), '2020-02-02').InstrumentationKey]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.18.4.5664",
+              "templateHash": "18280443506201599223"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "organizationPrefix": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "applicationInsightsInstrumentationKey": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2022-09-01",
+              "name": "[format('asp-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment'))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Y1",
+                "tier": "Dynamic"
+              },
+              "properties": {}
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2022-09-01",
+              "name": "[format('sa-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment'))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard_LRS"
+              },
+              "kind": "Storage",
+              "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "defaultToOAuthAuthentication": true
+              }
+            },
+            {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2022-09-01",
+              "name": "[format('func-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment'))]",
+              "location": "[parameters('location')]",
+              "kind": "functionapp",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('asp-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment')))]",
+                "siteConfig": {
+                  "linuxFxVersion": "DOTNET|6.0",
+                  "appSettings": [
+                    {
+                      "name": "AzureWebJobsStorage",
+                      "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('sa-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment')), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('sa-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment'))), '2022-09-01').keys[0].value)]"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                      "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('sa-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment')), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('sa-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment'))), '2022-09-01').keys[0].value)]"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTSHARE",
+                      "value": "[toLower('openingHours')]"
+                    },
+                    {
+                      "name": "FUNCTIONS_EXTENSION_VERSION",
+                      "value": "~4"
+                    },
+                    {
+                      "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                      "value": "[parameters('applicationInsightsInstrumentationKey')]"
+                    },
+                    {
+                      "name": "FUNCTIONS_WORKER_RUNTIME",
+                      "value": "dotnet"
+                    }
+                  ],
+                  "ftpsState": "FtpsOnly",
+                  "minTlsVersion": "1.2"
+                },
+                "httpsOnly": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', format('asp-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment')))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', format('sa-{0}-openingHours-{1}', parameters('organizationPrefix'), parameters('environment')))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('rg-{0}-openingHours-{1}', variables('organizationPrefix'), parameters('environment')))]"
+      ]
+    }
+  ]
+}
