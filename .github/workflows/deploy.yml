@@ -28,8 +28,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: 'Run Azure Functions Action'
+      - name: List
+        run: ls -a
+
+      - name: Deploy to Azure
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ vars.FUNCTION_APP_NAME }}
-          package: './output'
+          package: 'output/'
