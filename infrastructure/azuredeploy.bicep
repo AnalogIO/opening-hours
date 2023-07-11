@@ -22,6 +22,11 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   scope: resourceGroup(sharedRg.name)
 }
 
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: 'log-${organizationPrefix}-${sharedResourcesAbbreviation}-${environment}'
+  scope: resourceGroup(sharedRg.name)
+}
+
 module functionapp 'functionapp.bicep' = {
   name: '${deployment().name}-func-openingHours'
   scope: functionAppRg
@@ -30,5 +35,7 @@ module functionapp 'functionapp.bicep' = {
     organizationPrefix: organizationPrefix
     environment: environment
     applicationInsightsInstrumentationKey: applicationInsights.properties.InstrumentationKey
+    logAnalyticsWorkspaceId: logAnalyticsWorkspace.id
+    sharedResourceGroupName: sharedRg.name
   }
 }

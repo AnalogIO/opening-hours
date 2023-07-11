@@ -1,0 +1,29 @@
+on:
+  pull_request:
+  workflow_call:
+
+env:
+  DOTNET_VERSION: '6.0.x'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dotnet-format
+        run: dotnet tool install -g dotnet-format
+
+      - name: Restore dependencies
+        run: dotnet restore opening-hours.csproj
+
+      - name: Build CoffeeCard solution
+        run: dotnet build --configuration Release --no-restore opening-hours.csproj --output ./output
+
+      - name: Check code formatting
+        run: dotnet-format --no-restore --check opening-hours.csproj

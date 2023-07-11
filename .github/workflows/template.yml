@@ -1,0 +1,26 @@
+name: Build and deploy dotnet core project to Azure Function App - func-aio-openingHours-dev
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build
+        uses: ./.github/workflows/build.yml
+
+      - name: 'Login Azure'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS}}
+
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: 'func-aio-openingHours-dev'
+          package: './output'

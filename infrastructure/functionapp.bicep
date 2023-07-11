@@ -6,6 +6,10 @@ param environment string
 
 param applicationInsightsInstrumentationKey string
 
+param logAnalyticsWorkspaceId string
+
+param sharedResourceGroupName string
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: 'asp-${organizationPrefix}-openingHours-${environment}'
   location: location
@@ -13,7 +17,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
     name: 'Y1'
     tier: 'Dynamic'
   }
-  properties: {}
+  properties: {
+    reserved: true
+  }
 }
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
@@ -26,6 +32,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   properties: {
     supportsHttpsTrafficOnly: true
     defaultToOAuthAuthentication: true
+    allowBlobPublicAccess: false
   }
 }
 
@@ -38,8 +45,12 @@ resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
   }
   properties: {
     serverFarmId: appServicePlan.id
+    httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|6.0'
+      http20Enabled: true
+      linuxFxVersion: 'DOTNET|6.0'
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
@@ -66,9 +77,57 @@ resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
           value: 'dotnet'
         }
       ]
-      ftpsState: 'FtpsOnly'
-      minTlsVersion: '1.2'
     }
-    httpsOnly: true
   }
+}
+
+resource diagnosticSettingsFunctionApp 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'Function App Logs'
+  scope: functionApp
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'FunctionAppLogs'
+        enabled: true
+      }
+    ]
+  }
+}
+
+module dns 'modules/webappDns.bicep' = {
+  name: '${deployment().name}-openinghours-dns'
+  scope: resourceGroup(sharedResourceGroupName)
+  params: {
+    environment: environment
+    webappVerificationIdValue: functionApp.properties.customDomainVerificationId
+    webappAzureGeneratedFqdn: functionApp.properties.defaultHostName
+  }
+}
+
+module certificate 'modules/webappManagedCertificate.bicep' = {
+  name: '${deployment().name}-core-certificate'
+  params: {
+    location: location
+    environment: environment
+    appservicePlanId: appServicePlan.id
+    webAppName: functionApp.name
+  }
+
+  dependsOn: [
+    dns
+  ]
+}
+
+module bindCertificate 'modules/bindCustomDomainCertificate.bicep' = {
+  name: '${deployment().name}-core-bind-certificate'
+  params: {
+    webAppName: functionApp.name
+    certificateThumbprint: certificate.outputs.certificateThumbprint
+    customDomainFqdn: certificate.outputs.customDomainFqdn
+  }
+
+  dependsOn: [
+    certificate
+  ]
 }
