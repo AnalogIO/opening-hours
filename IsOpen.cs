@@ -22,7 +22,7 @@ namespace OpeningHours
         [OpenApiOperation(operationId: "IsOpen")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(bool), Description = "Check if the cafè is open")]
         public ActionResult<bool> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "OpeningHours/IsOpen")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "isopen")] HttpRequest req,
             ExecutionContext context)
         {
             _logger.LogInformation("IsOpen called");
