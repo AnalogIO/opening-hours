@@ -21,15 +21,20 @@ jobs:
 
       - name: Install dotnet-format
         run: dotnet tool install -g dotnet-format
+        
+      - name: Check code formatting
+        run: dotnet-format .
 
       - name: Restore dependencies
         run: dotnet restore opening-hours.csproj
-
+        
       - name: Build Opening Hours project
         run: dotnet build --configuration Release --no-restore opening-hours.csproj --output ./output
 
-      - name: Check code formatting
-        run: dotnet-format --no-restore --check opening-hours.csproj
+      - name: List
+        run: |
+          ls -a
+          ls -a ./output
 
       - name: Publish Artifact
         uses: actions/upload-artifact@v3
