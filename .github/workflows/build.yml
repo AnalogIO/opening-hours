@@ -31,15 +31,17 @@ jobs:
       - name: Build Opening Hours project
         run: dotnet build --configuration Release --no-restore opening-hours.csproj --output ./output
 
-      - name: List
-        run: |
-          ls -a
-          ls -a ./output
+      - name: Archive
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          type: 'zip'
+          filename: 'function.zip'
+          path: ./output/
 
       - name: Publish Artifact
         uses: actions/upload-artifact@v3
         with:
           name: function
-          path: ./output/
+          path: function.zip
           retention-days: 1
           if-no-files-found: error
