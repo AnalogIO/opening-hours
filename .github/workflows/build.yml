@@ -30,3 +30,8 @@ jobs:
 
       - name: Check code formatting
         run: dotnet-format --no-restore --check opening-hours.csproj
+
+      - name: Publish Artifact
+        uses: actions/publish-artifact@v3
+        with:
+          name: function
