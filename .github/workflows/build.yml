@@ -25,7 +25,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore opening-hours.csproj
 
-      - name: Build CoffeeCard solution
+      - name: Build Opening Hours project
         run: dotnet build --configuration Release --no-restore opening-hours.csproj --output ./output
 
       - name: Check code formatting

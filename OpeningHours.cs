@@ -26,8 +26,8 @@ namespace OpeningHours
         [OpenApiOperation(operationId: "OpeningHours")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(Dictionary<string, Day>), Description = "Get the opening hours for the cafè")]
         public ActionResult<Dictionary<string, Day>> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "OpeningHours")] HttpRequest req, 
-            ExecutionContext context )
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "OpeningHours")] HttpRequest req,
+            ExecutionContext context)
         {
             _logger.LogInformation("OpeningHours called");
 
