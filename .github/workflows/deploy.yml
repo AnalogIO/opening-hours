@@ -1,0 +1,33 @@
+name: Deploy Function App
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ENVIRONMENT: dev
+
+jobs:
+  build:
+      name: Build
+      uses: ./.github/workflows/build.yml
+      secrets: inherit
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    concurrency:
+      group: dev
+      cancel-in-progress: false
+    steps:
+      - name: 'Login Azure'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.FUNCTION_APP_NAME }}
+          package: './output'
